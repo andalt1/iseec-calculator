@@ -34,7 +34,9 @@ st.set_page_config(
 # КОНФИГУРАЦИЯ
 # ============================================================================
 
-DADATA_API_KEY = "cddf26e9e63ce849270a77f8941971a3f14cce48"
+# API-ключ берется из Streamlit Secrets (безопасно)
+# Если ключ не настроен — функция автозаполнения по ИНН будет недоступна
+DADATA_API_KEY = st.secrets.get("DADATA_API_KEY", None)
 
 # ============================================================================
 # СПРАВОЧНЫЕ ДАННЫЕ
@@ -194,6 +196,10 @@ INST_CRITERIA = [
 def get_company_by_inn(inn: str) -> dict:
     """Получение данных о компании по ИНН через DaData API"""
     
+    # Проверка наличия API-ключа
+    if not DADATA_API_KEY:
+        return {"error": "API-ключ DaData не настроен. Функция автозаполнения недоступна."}
+    
     if not inn.isdigit() or len(inn) not in [10, 12]:
         return {"error": "Неверный формат ИНН. Должно быть 10 цифр (юрлицо) или 12 цифр (ИП)"}
     
@@ -264,12 +270,22 @@ def calculate_i_media(val_i: float, x_ref: float) -> float:
         i_media = 100.0
     return i_media
 
-def calculate_v_vol(monthly_values: list) -> float:
+def calculate_v_vol(monthly_values: list, x_ref: float = None) -> float:
+    """
+    Расчет коэффициента волатильности.
+    Если среднее значение < 1% от X_ref (или < 1 при отсутствии X_ref),
+    возвращается максимальная волатильность (данные недостаточны для анализа).
+    """
     if len(monthly_values) < 2:
         return 0.0
     mu = np.mean(monthly_values)
-    if mu <= 0:
-        return float('inf')
+    
+    # Порог: 1% от эталона или минимум 1
+    threshold = (x_ref * 0.01) if x_ref and x_ref > 0 else 1.0
+    
+    if mu < threshold:
+        return float('inf')  # Данные недостаточны для корректного расчета
+    
     sigma = np.std(monthly_values, ddof=0)
     v_vol = sigma / mu
     return v_vol
@@ -733,7 +749,7 @@ def page_calculator():
                 monthly_values.append(val)
         
         i_media = calculate_i_media(media_index_year, x_ref)
-        v_vol = calculate_v_vol(monthly_values)
+        v_vol = calculate_v_vol(monthly_values, x_ref)
         m_stab = calculate_m_stab(i_media, v_vol)
         
     else:
