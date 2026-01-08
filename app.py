@@ -905,7 +905,7 @@ def page_calculator():
     # ========================================================================
     # РАСЧЕТ И РЕЗУЛЬТАТЫ
     # ========================================================================
-    if st.button("🧮 Рассчитать ISEEC", type="primary", use_container_width=True):
+    if st.button("🧮 Рассчитать ISEEC", type="secondary", use_container_width=True):
         
         s_rep = calculate_s_rep(v_hr, r_transp, r_inst)
         i_core = calculate_i_core(m_stab, s_rep)
