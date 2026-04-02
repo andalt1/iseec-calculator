@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-ISEEC Calculator - Калькулятор Интегрального индекса социально-экономической 
+Калькулятор ОСЭЭК — Интегральный индекс социально-экономической 
 эффективности коммуникаций
 
 Авторы методики: Алтухов А.С., Бобылева А.З.
-МГУ имени М.В. Ломоносова, Факультет государственного управления
 """
 
 import streamlit as st
@@ -25,7 +24,7 @@ except ImportError:
 
 # Настройка страницы
 st.set_page_config(
-    page_title="ISEEC Calculator",
+    page_title="Калькулятор ОСЭЭК",
     page_icon="📊",
     layout="wide"
 )
@@ -257,7 +256,7 @@ def determine_industry_by_okved(okved: str) -> str:
     return "Другая отрасль"
 
 # ============================================================================
-# ФУНКЦИИ РАСЧЕТА ISEEC
+# ФУНКЦИИ РАСЧЕТА ОСЭЭК
 # ============================================================================
 
 def calculate_i_media(val_i: float, x_ref: float) -> float:
@@ -422,7 +421,7 @@ def generate_word_report(r: dict, recommendations: list) -> bytes:
     """Генерация расширенного отчета в формате Word"""
     doc = Document()
     
-    title = doc.add_heading('ОТЧЕТ О РАСЧЕТЕ ISEEC', 0)
+    title = doc.add_heading('ОТЧЕТ О РАСЧЕТЕ ОСЭЭК', 0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     doc.add_paragraph(f"Дата формирования: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
@@ -532,9 +531,8 @@ def generate_word_report(r: dict, recommendations: list) -> bytes:
     doc.add_paragraph()
     
     p = doc.add_paragraph()
-    p.add_run('Методика ISEEC').italic = True
+    p.add_run('Методика ОСЭЭК').italic = True
     doc.add_paragraph('Авторы: Алтухов А.С., Бобылева А.З.')
-    doc.add_paragraph('МГУ имени М.В. Ломоносова, Факультет государственного управления')
     
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -548,13 +546,12 @@ def generate_word_report(r: dict, recommendations: list) -> bytes:
 def page_calculator():
     """Основная страница калькулятора"""
     
-    st.title("📊 ISEEC Calculator")
+    st.title("📊 Калькулятор ОСЭЭК")
     st.markdown("""
-    **Калькулятор Интегрального индекса социально-экономической эффективности коммуникаций**
+    **Интегральный индекс социально-экономической эффективности коммуникаций**
     
     ---
-    **Авторы методики:** Алтухов А.С., Бобылева А.З.  
-    *МГУ имени М.В. Ломоносова, Факультет государственного управления*
+    **Авторы методики:** Алтухов А.С., Бобылева А.З.
     """)
     
     st.divider()
@@ -933,7 +930,7 @@ def page_calculator():
     # ========================================================================
     # РАСЧЕТ И РЕЗУЛЬТАТЫ
     # ========================================================================
-    if st.button("🧮 Рассчитать ISEEC", type="primary", use_container_width=True):
+    if st.button("🧮 Рассчитать ОСЭЭК", type="primary", use_container_width=True):
         
         s_rep = calculate_s_rep(v_hr, r_transp, r_inst)
         i_core = calculate_i_core(m_stab, s_rep)
@@ -1107,7 +1104,7 @@ def page_calculator():
                         st.markdown(f"**+{rec['potential']}** б.")
         
         # Шкала интерпретации
-        with st.expander("📖 Шкала интерпретации ISEEC"):
+        with st.expander("📖 Шкала интерпретации ОСЭЭК"):
             st.markdown("""
             | Баллы | Уровень | Что это значит |
             |-------|---------|----------------|
@@ -1156,7 +1153,7 @@ def page_calculator():
         
         safe_name = (r['company_name'] or 'company').replace(' ', '_').replace('"', '').replace('«', '').replace('»', '')[:30]
         
-        report_text = f"""ОТЧЕТ О РАСЧЕТЕ ISEEC
+        report_text = f"""ОТЧЕТ О РАСЧЕТЕ ОСЭЭК
 {'='*60}
 
 Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}
@@ -1191,9 +1188,8 @@ R_inst (институциональная зрелость): {r['r_inst']:.0f}/
         
         report_text += f"""
 {'='*60}
-Методика ISEEC
+Методика ОСЭЭК
 Авторы: Алтухов А.С., Бобылева А.З.
-МГУ имени М.В. Ломоносова
 """
         
         col1, col2, col3 = st.columns(3)
@@ -1204,7 +1200,7 @@ R_inst (институциональная зрелость): {r['r_inst']:.0f}/
                 st.download_button(
                     label="📥 Скачать (Word)",
                     data=word_bytes,
-                    file_name=f"ISEEC_{safe_name}_{r['report_year']}.docx",
+                    file_name=f"OSEEK_{safe_name}_{r['report_year']}.docx",
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 )
         
@@ -1212,7 +1208,7 @@ R_inst (институциональная зрелость): {r['r_inst']:.0f}/
             st.download_button(
                 label="📥 Скачать (TXT)",
                 data=report_text,
-                file_name=f"ISEEC_{safe_name}_{r['report_year']}.txt",
+                file_name=f"OSEEK_{safe_name}_{r['report_year']}.txt",
                 mime="text/plain"
             )
         
@@ -1221,7 +1217,7 @@ R_inst (институциональная зрелость): {r['r_inst']:.0f}/
             st.download_button(
                 label="📥 Скачать (CSV)",
                 data=csv_data,
-                file_name=f"ISEEC_{safe_name}_{r['report_year']}.csv",
+                file_name=f"OSEEK_{safe_name}_{r['report_year']}.csv",
                 mime="text/csv"
             )
 
@@ -1229,12 +1225,12 @@ R_inst (институциональная зрелость): {r['r_inst']:.0f}/
 def page_methodology():
     """Страница методики"""
     
-    st.title("📖 О методике ISEEC")
+    st.title("📖 О методике ОСЭЭК")
     
     st.markdown("""
     ## Интегральный индекс социально-экономической эффективности коммуникаций
     
-    **ISEEC** (Integral Index of Socio-Economic Effectiveness of Communications) — 
+    **ОСЭЭК** (ISEEC — Integral Index of Socio-Economic Effectiveness of Communications) — 
     методика количественной оценки результативности коммуникационной системы организации.
     
     ### Назначение
@@ -1280,9 +1276,6 @@ def page_methodology():
     ### Авторы методики
     
     **Алтухов А.С., Бобылева А.З.**
-    
-    МГУ имени М.В. Ломоносова  
-    Факультет государственного управления
     """)
 
 
@@ -1293,14 +1286,14 @@ def page_methodology():
 def main():
     page = st.sidebar.radio(
         "Навигация",
-        options=["🧮 Калькулятор", "📖 О методике"],
+        options=["🧮 Калькулятор", "📖 О методике ОСЭЭК"],
         index=0
     )
     
     st.sidebar.divider()
     st.sidebar.markdown("""
-    **ISEEC Calculator**  
-    Версия 1.0
+    **Калькулятор ОСЭЭК**  
+    Версия 1.1
     
     ---
     Авторы методики:  
