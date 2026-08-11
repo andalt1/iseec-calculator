@@ -43,12 +43,12 @@ html, body,
     font-family: 'Material Symbols Rounded' !important;
 }
 [data-testid="stAppViewContainer"] {
-    background: #EAF0F8;
+    background: #FFFFFF;
 }
 [data-testid="stHeader"] {
     background: transparent;
 }
-.block-container {
+[data-testid="stMainBlockContainer"], .block-container {
     max-width: 1180px;
     padding-top: 1.3rem;
     padding-bottom: 3rem;
@@ -106,64 +106,112 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
     margin-top: 0.6rem;
 }
 
-.oseec-step {
+/* --- Плашка-заголовок карточки: залитая полоса во всю ширину --------------- */
+.oseec-plate {
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    margin: 0.05rem 0 1rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #E6EDF7;
+    flex-wrap: wrap;
+    background: linear-gradient(120deg, #012169 0%, #123278 62%, #1D4396 100%);
+    margin: -1.15rem -1.45rem 0.15rem -1.45rem;
+    padding: 0.66rem 1.35rem 0.64rem 1.35rem;
+    border-radius: 13px 13px 0 0;
 }
-.oseec-step .num {
-    background: #012169;
+.oseec-plate .num {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1.5px solid rgba(255, 255, 255, 0.72);
     color: #FFFFFF;
     font-weight: 600;
-    font-size: 0.95rem;
-    width: 1.9rem;
-    height: 1.9rem;
+    font-size: 0.92rem;
+    width: 1.8rem;
+    height: 1.8rem;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
 }
-.oseec-step .txt {
+.oseec-plate .txt {
     font-family: 'PT Serif', Georgia, serif;
     font-weight: 700;
-    font-size: 1.18rem;
+    font-size: 1.13rem;
+    color: #FFFFFF;
+    line-height: 1.3;
+}
+.oseec-plate .sub {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: #C3D2F0;
+    text-align: right;
+    line-height: 1.35;
+    max-width: 46%;
+}
+.oseec-plate.light {
+    background: #E3EBFA;
+}
+.oseec-plate.light .txt { color: #012169; }
+.oseec-plate.light .num {
+    background: #FFFFFF;
+    border-color: #012169;
     color: #012169;
 }
-.oseec-step .sub {
-    font-size: 0.86rem;
-    color: #6B7686;
-    margin-left: 0.2rem;
+.oseec-plate.light .sub { color: #5A6B8C; }
+
+/* --- Полоса-разделитель раздела страницы ----------------------------------- */
+.oseec-band {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    background: linear-gradient(120deg, #012169 0%, #1D4396 100%);
+    border-radius: 12px;
+    padding: 0.8rem 1.35rem;
+    margin: 1.6rem 0 1.15rem 0;
+    box-shadow: 0 3px 12px rgba(1, 33, 105, 0.18);
+}
+.oseec-band .txt {
+    font-family: 'PT Serif', Georgia, serif;
+    font-weight: 700;
+    font-size: 1.32rem;
+    color: #FFFFFF;
+}
+.oseec-band .sub {
+    font-size: 0.85rem;
+    color: #C3D2F0;
+    margin-left: auto;
 }
 
-.oseec-hero {
-    border: 1px solid #C9D7EA;
-    border-left: 5px solid #012169;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #FFFFFF 0%, #F4F8FC 100%);
-    padding: 1.35rem 1.7rem 1.25rem 1.7rem;
-    margin: 0.4rem 0 0.9rem 0;
-}
-.oseec-hero .lbl {
-    font-size: 0.86rem;
-    color: #6B7686;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-.oseec-hero .val {
-    font-family: 'PT Serif', Georgia, serif;
-    font-weight: 700;
-    font-size: 3.3rem;
-    line-height: 1.05;
+/* --- Внутренние подзаголовки и подписи ------------------------------------- */
+.oseec-sub {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 600;
+    font-size: 1.0rem;
     color: #012169;
+    margin: 0.55rem 0 0.15rem 0;
 }
-.oseec-hero .unit {
-    font-size: 1.05rem;
+.oseec-sub::before {
+    content: "";
+    width: 5px;
+    height: 1.05rem;
+    background: #5E8FEF;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+.oseec-eyebrow {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: #6B7686;
-    font-weight: 400;
+    margin: 0.25rem 0 0.05rem 0;
+}
+.oseec-lead {
+    color: #4A5568;
+    font-size: 0.97rem;
+    line-height: 1.62;
+    margin: -0.35rem 0 0.9rem 0;
 }
 
 .oseec-chip {
@@ -177,13 +225,14 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
     white-space: nowrap;
 }
 .oseec-note {
-    border: 1px solid #C9D7EA;
-    border-radius: 10px;
-    background: #F4F8FC;
+    border: 1px solid #D9E4F2;
+    border-left: 3px solid #5E8FEF;
+    border-radius: 8px;
+    background: #F7FAFD;
     color: #232830;
-    font-size: 0.88rem;
+    font-size: 0.87rem;
     line-height: 1.55;
-    padding: 0.7rem 1rem;
+    padding: 0.6rem 0.95rem;
     margin: 0.35rem 0;
 }
 .oseec-crit {
@@ -223,14 +272,27 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
     font-size: 1.75rem !important;
 }
 
-[data-testid="stVerticalBlockBorderWrapper"] > div {
-    border: 1px solid #D8E3F2 !important;
+/* Карточка = вертикальный блок, первым элементом которого идет плашка */
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stVerticalBlock"] > div[data-testid="stElementContainer"] .oseec-plate) {
+    margin: 0.3rem 0 1.05rem 0;
+}
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate) {
+    border: 1px solid #C9D7EA !important;
     border-radius: 14px !important;
     background: #FFFFFF;
-    box-shadow: 0 2px 14px rgba(1, 33, 105, 0.06);
+    box-shadow: 0 2px 10px rgba(1, 33, 105, 0.07);
     padding: 1.15rem 1.45rem 1.35rem 1.45rem !important;
 }
-/* легкая синяя полоса-акцент слева у карточек-шагов */
+/* Тонированный вариант карточки (чередование фонов) */
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate.z) {
+    background: #F0F5FC;
+}
+/* Панель итога: заливка и усиленная рамка */
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate.result) {
+    background: linear-gradient(180deg, #FFFFFF 0%, #EDF3FC 100%) !important;
+    border: 1px solid #A9BFE2 !important;
+    box-shadow: 0 4px 16px rgba(1, 33, 105, 0.13);
+}
 .oseec-hlabel {
     font-size: 0.85rem;
     color: #6B7686;
@@ -288,6 +350,24 @@ thead tr th {
     color: #232830 !important;
 }
 
+@media (max-width: 700px) {
+    div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate) {
+        padding: 0.95rem 0.95rem 1.1rem 0.95rem !important;
+    }
+    .oseec-plate {
+        margin: -0.95rem -0.95rem 0.15rem -0.95rem;
+        padding: 0.58rem 0.95rem;
+    }
+    .oseec-plate .sub {
+        margin-left: 0;
+        max-width: 100%;
+        text-align: left;
+        flex-basis: 100%;
+    }
+    .oseec-band { padding: 0.7rem 0.95rem; }
+    .oseec-band .sub { margin-left: 0; flex-basis: 100%; }
+}
+
 [data-testid="stToolbar"] { visibility: hidden; }
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
@@ -320,20 +400,63 @@ def sidebar_footer() -> None:
           МГУ имени М.В. Ломоносова, факультет государственного управления<br><br>
           Свидетельство о государственной регистрации программы для ЭВМ
           № 2026663079 от 04.05.2026<br><br>
-          Версия 2.0 · август 2026
+          Версия 2.1 · август 2026
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def step_header(num, title: str, sub: str = "") -> None:
-    sub_html = f'<span class="sub">{sub}</span>' if sub else ""
+def _plate_html(title: str, sub: str = "", num=None, light: bool = False,
+                tint: bool = False, result: bool = False) -> str:
+    num_html = f'<div class="num">{num}</div>' if num is not None else ""
+    sub_html = f'<div class="sub">{sub}</div>' if sub else ""
+    cls = "oseec-plate light" if light else "oseec-plate"
+    if tint:
+        cls += " z"
+    if result:
+        cls += " result"
+    return (f'<div class="{cls}">{num_html}'
+            f'<div class="txt">{title}</div>{sub_html}</div>')
+
+
+def step_header(num, title: str, sub: str = "", tint: bool = False) -> None:
+    """Навесная плашка-заголовок шага с номером."""
+    st.markdown(_plate_html(title, sub, num=num, tint=tint),
+                unsafe_allow_html=True)
+
+
+def card_title(title: str, sub: str = "", light: bool = False,
+               tint: bool = False, result: bool = False) -> None:
+    """Плашка-заголовок карточки без номера (light — светлый вариант)."""
+    st.markdown(_plate_html(title, sub, light=light, tint=tint, result=result),
+                unsafe_allow_html=True)
+
+
+def section_band(title: str, sub: str = "") -> None:
+    """Полоса-разделитель раздела страницы."""
+    sub_html = f'<div class="sub">{sub}</div>' if sub else ""
     st.markdown(
-        f'<div class="oseec-step"><div class="num">{num}</div>'
-        f'<div class="txt">{title}</div>{sub_html}</div>',
+        f'<div class="oseec-band"><div class="txt">{title}</div>{sub_html}</div>',
         unsafe_allow_html=True,
     )
+
+
+def lead(text: str) -> None:
+    """Вводный абзац страницы приглушенным кеглем."""
+    st.markdown(f'<div class="oseec-lead">{text}</div>',
+                unsafe_allow_html=True)
+
+
+def sub_label(text: str) -> None:
+    """Внутренний подзаголовок блока с синей меткой."""
+    st.markdown(f'<div class="oseec-sub">{text}</div>', unsafe_allow_html=True)
+
+
+def eyebrow(text: str) -> None:
+    """Мелкая надпись-ярлык над группой индикаторов."""
+    st.markdown(f'<div class="oseec-eyebrow">{text}</div>',
+                unsafe_allow_html=True)
 
 
 def level_chip(level_idx: int, text: str = None) -> str:
@@ -342,23 +465,6 @@ def level_chip(level_idx: int, text: str = None) -> str:
     label = text or LEVEL_NAMES[level_idx]
     return (f'<span class="oseec-chip" style="background:{tint};'
             f'border-color:{accent};">{label}</span>')
-
-
-def hero_result(value: float, level_idx: int, subtitle: str,
-                extra_html: str = "") -> None:
-    st.markdown(
-        f"""
-        <div class="oseec-hero">
-          <div class="lbl">{subtitle}</div>
-          <div style="display:flex;align-items:baseline;gap:1.1rem;flex-wrap:wrap;">
-            <div class="val">{fmt(value)}<span class="unit"> балла</span></div>
-            <div>{level_chip(level_idx, LEVEL_NAMES[level_idx] + " уровень")}</div>
-          </div>
-          {extra_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
 
 # ---------------------------------------------------------------------------
