@@ -23,6 +23,8 @@ BLUE = "#5E8FEF"
 # Уровни шкалы: акцентные цвета и светлые заливки полос
 LEVEL_ACCENT = ("#A6261C", "#CE6E43", "#8792A3", "#4A77D4", "#123A8C")
 LEVEL_TINT = ("#F6E4E2", "#F9EBE3", "#EFF1F5", "#E3EBFA", "#DFE5F3")
+# Насыщеннее тинтов — для дуги спидометра, чтобы зоны читались с проектора
+GAUGE_ZONES = ("#E4BCB5", "#EDCDB4", "#CDD5E2", "#B7C9EE", "#A5B9E7")
 LEVEL_EDGES = (0.0, 25.0, 50.0, 75.0, 100.0, 116.0)
 
 FONT_BODY = "Inter, 'PT Sans', 'Segoe UI', sans-serif"
@@ -41,7 +43,10 @@ html, body,
     font-family: 'Material Symbols Rounded' !important;
 }
 [data-testid="stAppViewContainer"] {
-    background: #FFFFFF;
+    background: #EAF0F8;
+}
+[data-testid="stHeader"] {
+    background: transparent;
 }
 .block-container {
     max-width: 1180px;
@@ -104,8 +109,10 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
 .oseec-step {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    margin: 1.6rem 0 0.6rem 0;
+    gap: 0.7rem;
+    margin: 0.05rem 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #E6EDF7;
 }
 .oseec-step .num {
     background: #012169;
@@ -217,8 +224,40 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
 }
 
 [data-testid="stVerticalBlockBorderWrapper"] > div {
-    border-color: #C9D7EA !important;
-    border-radius: 12px !important;
+    border: 1px solid #D8E3F2 !important;
+    border-radius: 14px !important;
+    background: #FFFFFF;
+    box-shadow: 0 2px 14px rgba(1, 33, 105, 0.06);
+    padding: 1.15rem 1.45rem 1.35rem 1.45rem !important;
+}
+/* легкая синяя полоса-акцент слева у карточек-шагов */
+.oseec-hlabel {
+    font-size: 0.85rem;
+    color: #6B7686;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+.oseec-hnum {
+    font-family: 'PT Serif', Georgia, serif;
+    font-weight: 700;
+    font-size: 3.15rem;
+    line-height: 1.02;
+    color: #012169;
+    margin-bottom: 0.35rem;
+}
+.oseec-hnum span {
+    font-size: 1.02rem;
+    color: #6B7686;
+    font-weight: 400;
+}
+.oseec-econtour {
+    margin-top: 0.7rem;
+    font-size: 0.95rem;
+    color: #232830;
+    background: #EDF2FA;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
 }
 
 div[data-testid="stExpander"] details {
@@ -359,6 +398,41 @@ def _level_bands(fig: go.Figure, y0: float, y1: float,
             fig.add_annotation(x=(x0 + x1) / 2, y=y1, yshift=10,
                                text=names_short[i], showarrow=False,
                                font=dict(size=11, color=GRAY), **kw)
+
+
+def fig_gauge(value: float, level_idx: int) -> go.Figure:
+    """Спидометр итогового значения на интерпретационной шкале.
+
+    Дуга разбита на пять зон качественных уровней, стрелка отмечает
+    итоговое значение. Наглядный ориентир для демонстрации результата.
+    """
+    v = min(max(value, 0.0), 116.0)
+    fig = go.Figure(go.Indicator(
+        mode="gauge",
+        value=v,
+        gauge=dict(
+            axis=dict(range=[0, 116], tickvals=[0, 25, 50, 75, 100],
+                      tickwidth=1, tickcolor=LINE, ticklen=6,
+                      tickfont=dict(size=11, color=GRAY)),
+            bar=dict(color="rgba(0,0,0,0)"),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            steps=[dict(range=[LEVEL_EDGES[i], LEVEL_EDGES[i + 1]],
+                        color=GAUGE_ZONES[i]) for i in range(5)],
+            threshold=dict(line=dict(color=NAVY, width=6), thickness=0.92,
+                           value=v),
+        ),
+        domain=dict(x=[0, 1], y=[0, 1]),
+    ))
+    fig.add_annotation(x=0.5, y=0.30, xref="paper", yref="paper",
+                       text=f"<b>{fmt(value)}</b>", showarrow=False,
+                       font=dict(family=FONT_SERIF, size=33, color=NAVY))
+    fig.add_annotation(x=0.5, y=0.11, xref="paper", yref="paper",
+                       text=LEVEL_NAMES[level_idx] + " уровень",
+                       showarrow=False, font=dict(size=12.5, color=GRAY))
+    fig.update_layout(height=248, margin=dict(l=22, r=22, t=14, b=4),
+                      paper_bgcolor="rgba(0,0,0,0)", font=_PLOT_FONT)
+    return fig
 
 
 def fig_scale(value: float, value_e: float = None,

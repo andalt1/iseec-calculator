@@ -43,50 +43,52 @@ base = inp.collect_base_inputs()
 res = oc.compute(base)
 company = st.session_state["c_name"].strip() or "текущий расчет"
 
-st.markdown(
-    f"<div class='oseec-note'>Проверяется расчет «<b>{company}</b>»: "
-    f"ОСЭЭК<sub>B</sub> = <b>{fmt(res['oseec_b'])}</b> балла, уровень — "
-    f"{res['level_name'].lower()}. Исходные данные берутся из раздела "
-    "«Калькулятор» — для проверки другого объекта измените их там.</div>",
-    unsafe_allow_html=True)
+# --- Объект проверки и запуск прогона --------------------------------------
+with st.container(border=True):
+    st.markdown(
+        f"<div class='oseec-note'>Проверяется расчет «<b>{company}</b>»: "
+        f"ОСЭЭК<sub>B</sub> = <b>{fmt(res['oseec_b'])}</b> балла, уровень — "
+        f"{res['level_name'].lower()}. Исходные данные берутся из раздела "
+        "«Калькулятор» — для проверки другого объекта измените их там.</div>",
+        unsafe_allow_html=True)
 
-# Спорные индикаторы
-all_indicators = (
-    [("transp_b1", i, f"Транспарентность · {t}")
-     for i, t in enumerate(oc.TRANSP_BLOCK1)]
-    + [("transp_b2", i, f"Транспарентность · {t}")
-       for i, t in enumerate(oc.TRANSP_BLOCK2)]
-    + [("inst_b1", i, f"Институциональная зрелость · {t}")
-       for i, t in enumerate(oc.INST_BLOCK1)]
-    + [("inst_b2", i, f"Институциональная зрелость · {t}")
-       for i, t in enumerate(oc.INST_BLOCK2)]
-)
-labels = {f"{blk}:{i}": lbl for blk, i, lbl in all_indicators}
-chosen = st.multiselect(
-    "Спорные индикаторы чек-листов (включаются с вероятностью 0,5)",
-    options=list(labels),
-    format_func=lambda k: labels[k],
-    help="Отметьте индикаторы, оценка которых допускает альтернативную "
-         "трактовку источников. В каждой итерации значение такого "
-         "индикатора меняется на противоположное с вероятностью 0,5.")
-disputed = [(k.split(":")[0], int(k.split(":")[1])) for k in chosen]
+    all_indicators = (
+        [("transp_b1", i, f"Транспарентность · {t}")
+         for i, t in enumerate(oc.TRANSP_BLOCK1)]
+        + [("transp_b2", i, f"Транспарентность · {t}")
+           for i, t in enumerate(oc.TRANSP_BLOCK2)]
+        + [("inst_b1", i, f"Институциональная зрелость · {t}")
+           for i, t in enumerate(oc.INST_BLOCK1)]
+        + [("inst_b2", i, f"Институциональная зрелость · {t}")
+           for i, t in enumerate(oc.INST_BLOCK2)]
+    )
+    labels = {f"{blk}:{i}": lbl for blk, i, lbl in all_indicators}
+    chosen = st.multiselect(
+        "Спорные индикаторы чек-листов (включаются с вероятностью 0,5)",
+        options=list(labels),
+        format_func=lambda k: labels[k],
+        help="Отметьте индикаторы, оценка которых допускает альтернативную "
+             "трактовку источников. В каждой итерации значение такого "
+             "индикатора меняется на противоположное с вероятностью 0,5.")
+    disputed = [(k.split(":")[0], int(k.split(":")[1])) for k in chosen]
 
-if st.button("Выполнить имитационный прогон", type="primary"):
-    with st.spinner("Выполняется 10 000 итераций..."):
-        mc = oc.run_mc_custom(
-            m_stab_v=res["m_stab"], vhr_v=res["v_hr"],
-            transp_b1=base.transp_b1, transp_b2=base.transp_b2,
-            inst_b1=base.inst_b1, inst_b2=base.inst_b2,
-            k_risk_v=res["k_risk"], k_scale_v=res["k_scale"],
-            disputed=disputed)
-    st.session_state["mc_custom_result"] = mc
-    st.session_state["mc_custom_meta"] = {
-        "company": company, "base_val": res["oseec_b"],
-        "level": res["level"], "disputed_n": len(disputed)}
+    if st.button("Выполнить имитационный прогон", type="primary"):
+        with st.spinner("Выполняется 10 000 итераций..."):
+            mc = oc.run_mc_custom(
+                m_stab_v=res["m_stab"], vhr_v=res["v_hr"],
+                transp_b1=base.transp_b1, transp_b2=base.transp_b2,
+                inst_b1=base.inst_b1, inst_b2=base.inst_b2,
+                k_risk_v=res["k_risk"], k_scale_v=res["k_scale"],
+                disputed=disputed)
+        st.session_state["mc_custom_result"] = mc
+        st.session_state["mc_custom_meta"] = {
+            "company": company, "base_val": res["oseec_b"],
+            "level": res["level"], "disputed_n": len(disputed)}
 
 mc = st.session_state.get("mc_custom_result")
 meta = st.session_state.get("mc_custom_meta")
 if mc and meta:
+  with st.container(border=True):
     if abs(meta["base_val"] - res["oseec_b"]) > 1e-9:
         st.markdown(
             "<div class='oseec-note'>Данные в калькуляторе изменились после "
