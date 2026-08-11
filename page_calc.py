@@ -64,10 +64,7 @@ with st.container(border=True):
             with fc2:
                 st.form_submit_button(
                     "Найти по ИНН", on_click=_do_lookup,
-                    use_container_width=True,
-                    help="Поиск запускается клавишей Enter или кнопкой; "
-                         "название организации и справочные сведения "
-                         "подставятся автоматически")
+                    use_container_width=True)
 
     info = st.session_state.get("c_info")
     if info:
@@ -102,9 +99,7 @@ with st.container(border=True):
     bc1, bc2, _ = st.columns([1.35, 0.75, 2.1])
     with bc1:
         st.button("Демонстрационный пример", use_container_width=True,
-                  on_click=inp.load_demo_into_state,
-                  help="Заполняет форму условными данными вымышленной "
-                       "компании, чтобы показать порядок работы")
+                  on_click=inp.load_demo_into_state)
     with bc2:
         st.button("Очистить", use_container_width=True,
                   on_click=inp.clear_all_inputs)
