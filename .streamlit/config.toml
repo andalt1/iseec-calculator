@@ -1,3 +1,6 @@
+[client]
+showErrorDetails = "none"
+
 [theme]
 primaryColor = "#012169"
 backgroundColor = "#FFFFFF"
