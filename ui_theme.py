@@ -157,17 +157,16 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
 }
 .oseec-plate.light .sub { color: #5A6B8C; }
 
-/* --- Полоса-разделитель раздела страницы ----------------------------------- */
+/* --- Шапка зоны результатов (полоса во всю ширину зоны) -------------------- */
 .oseec-band {
     display: flex;
     align-items: baseline;
     gap: 0.9rem;
     flex-wrap: wrap;
     background: linear-gradient(120deg, #012169 0%, #1D4396 100%);
-    border-radius: 12px;
+    border-radius: 15px 15px 0 0;
     padding: 0.8rem 1.35rem;
-    margin: 1.6rem 0 1.15rem 0;
-    box-shadow: 0 3px 12px rgba(1, 33, 105, 0.18);
+    margin: -1.05rem -1.1rem 0.85rem -1.1rem;
 }
 .oseec-band .txt {
     font-family: 'PT Serif', Georgia, serif;
@@ -293,6 +292,20 @@ div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .
     border: 1px solid #A9BFE2 !important;
     box-shadow: 0 4px 16px rgba(1, 33, 105, 0.13);
 }
+/* Зона результатов: сплошное синее полотно-подложка с шапкой-полосой.
+   Зоной считается контейнер, первым элементом которого идет .oseec-band */
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-band) {
+    background: #DDE7F7 !important;
+    border: 1px solid #B9CCE9 !important;
+    border-radius: 16px !important;
+    padding: 1.05rem 1.1rem 1.1rem 1.1rem !important;
+    box-shadow: inset 0 1px 4px rgba(1, 33, 105, 0.05);
+}
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stVerticalBlock"] > div[data-testid="stElementContainer"] .oseec-band) {
+    margin: 1.5rem 0 1.05rem 0;
+}
+/* Английские подсказки Press Enter to apply у полей скрываем */
+[data-testid="InputInstructions"] { display: none; }
 .oseec-hlabel {
     font-size: 0.85rem;
     color: #6B7686;
@@ -332,15 +345,18 @@ div[data-testid="stExpander"] summary {
     color: #012169;
 }
 
-.stButton button, .stDownloadButton button {
+.stButton button, .stDownloadButton button,
+[data-testid="stFormSubmitButton"] button {
     border-radius: 8px;
     font-weight: 600;
 }
-.stButton button[kind="primary"], .stDownloadButton button[kind="primary"] {
+.stButton button[kind="primary"], .stDownloadButton button[kind="primary"],
+[data-testid="stFormSubmitButton"] button[kind="primary"] {
     background: #012169;
     border: 1px solid #012169;
 }
-.stButton button[kind="primary"]:hover, .stDownloadButton button[kind="primary"]:hover {
+.stButton button[kind="primary"]:hover, .stDownloadButton button[kind="primary"]:hover,
+[data-testid="stFormSubmitButton"] button[kind="primary"]:hover {
     background: #0A2E86;
     border-color: #0A2E86;
 }
@@ -364,7 +380,13 @@ thead tr th {
         text-align: left;
         flex-basis: 100%;
     }
-    .oseec-band { padding: 0.7rem 0.95rem; }
+    div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-band) {
+        padding: 0.85rem 0.7rem 0.75rem 0.7rem !important;
+    }
+    .oseec-band {
+        padding: 0.7rem 0.95rem;
+        margin: -0.85rem -0.7rem 0.7rem -0.7rem;
+    }
     .oseec-band .sub { margin-left: 0; flex-basis: 100%; }
 }
 

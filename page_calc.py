@@ -22,6 +22,9 @@ ui.lead(
 
 
 def _do_lookup() -> None:
+    if not st.session_state.get("c_inn", "").strip():
+        st.session_state["c_info"] = None
+        return
     info = dadata_api.lookup_inn(st.session_state.get("c_inn", ""))
     st.session_state["c_info"] = info
     if "error" in info:
@@ -40,8 +43,8 @@ def _do_lookup() -> None:
 # --- Карточка «Объект оценки» ----------------------------------------------
 with st.container(border=True):
     ui.card_title("Объект оценки",
-                  "название и ступень масштаба подставляются по ИНН")
-    nc1, nc2, nc3 = st.columns([2.3, 1.1, 0.85], vertical_alignment="bottom")
+                  "введите ИНН и нажмите Enter — название подставится")
+    nc1, nc2 = st.columns([2.3, 1.95], vertical_alignment="bottom")
     with nc1:
         st.text_input(
             "Наименование организации",
@@ -49,11 +52,18 @@ with st.container(border=True):
             placeholder="Введите название или найдите компанию по ИНН",
         )
     with nc2:
-        st.text_input("ИНН", key="c_inn", placeholder="10 или 12 цифр")
-    with nc3:
-        st.button("Найти по ИНН", on_click=_do_lookup, use_container_width=True,
-                  help="Название организации и справочные сведения подставятся "
-                       "автоматически")
+        with st.form("inn_form", border=False):
+            fc1, fc2 = st.columns([1.1, 0.85], vertical_alignment="bottom")
+            with fc1:
+                st.text_input("ИНН", key="c_inn",
+                              placeholder="10 или 12 цифр")
+            with fc2:
+                st.form_submit_button(
+                    "Найти по ИНН", on_click=_do_lookup,
+                    use_container_width=True,
+                    help="Поиск запускается клавишей Enter или кнопкой; "
+                         "название организации и справочные сведения "
+                         "подставятся автоматически")
 
     info = st.session_state.get("c_info")
     if info:
@@ -331,136 +341,138 @@ base = inp.collect_base_inputs()
 ext = inp.collect_ext_inputs()
 res = oc.compute(base, ext)
 
-ui.section_band("Результаты расчета",
-                "обновляются автоматически при изменении данных")
-
 company = st.session_state["c_name"].strip()
 subtitle = ("базовый контур · " + company) if company else \
     "базовый контур — внешняя оценка по открытым источникам"
 
-# --- Панель итога: спидометр + значение ------------------------------------
+# --- Зона результатов: синее полотно-подложка -------------------------------
 with st.container(border=True):
-    ui.card_title("Итоговое значение индекса", subtitle, result=True)
-    gcol, tcol = st.columns([1, 1.15], vertical_alignment="center")
-    with gcol:
-        st.plotly_chart(ui.fig_gauge(res["oseec_b"], res["level"]),
-                        use_container_width=True, config=ui.PLOTLY_CONFIG)
-    with tcol:
-        econtour = ""
-        if "oseec_e" in res:
-            econtour = (
-                f"<div class='oseec-econtour'>Расширенный контур: "
-                f"ОСЭЭК<sub>E</sub> = ОСЭЭК<sub>B</sub> × {fmt(res['k_eff'])} "
-                f"= <b>{fmt(res['oseec_e'])}</b> балла — "
-                f"{res['level_e_name'].lower()} уровень</div>")
-        st.markdown(
-            f"""
-            <div class="oseec-hlabel">ОСЭЭК базового контура</div>
-            <div class="oseec-hnum">{fmt(res['oseec_b'])}<span> балла</span></div>
-            <div>{ui.level_chip(res['level'],
-                                LEVEL_NAMES[res['level']] + ' уровень')}</div>
-            <div class="oseec-form" style="margin-top:0.8rem;">
-              ОСЭЭК<sub>B</sub> = I<sub>Core</sub> × K<sub>risk</sub> ×
-              K<sub>scale</sub> = {fmt(res['i_core'])} × {fmt(res['k_risk'])} ×
-              {fmt(res['k_scale'])} = <b>{fmt(res['oseec_b'])}</b>
-            </div>
-            {econtour}
-            """,
-            unsafe_allow_html=True)
+    ui.section_band("Результаты расчета",
+                    "обновляются автоматически при изменении данных")
 
-    scen_points = None
-    if res.get("hr_scenarios"):
-        scen_points = {f"V_hr = {int(k)}": v
-                       for k, v in res["hr_scenarios"].items()}
-    st.plotly_chart(
-        ui.fig_scale(res["oseec_b"], res.get("oseec_e"), scen_points),
-        use_container_width=True, config=ui.PLOTLY_CONFIG)
-
-# --- Критические ограничения и примечания ----------------------------------
-if res["critical"] or res["notes"]:
+    # --- Панель итога: спидометр + значение ------------------------------------
     with st.container(border=True):
-        ui.card_title("Диагностические статусы и примечания", light=True)
-        if res["critical"]:
-            items = "".join(
-                f"<div class='oseec-crit'><b>Критическое ограничение:</b> "
-                f"{kind} «{name}» — {fmt(val)} балла при пороговом уровне "
-                f"{'40' if kind == 'субиндекс' else '30'} баллов.</div>"
-                for kind, name, val in res["critical"])
-            st.markdown(items, unsafe_allow_html=True)
-            st.caption(
-                "Расчетная величина индекса при присвоении статуса не "
-                "изменяется: слабый результат уже отражен в формуле. Статус "
-                "дополняет качественную характеристику оценки указанием на "
-                "проблемную зону."
-            )
-        for note in res["notes"]:
-            st.markdown(f"<div class='oseec-note'>{note}</div>",
-                        unsafe_allow_html=True)
-
-# --- Сценарный диапазон V_hr -----------------------------------------------
-if res.get("hr_scenarios"):
-    with st.container(border=True):
-        s0, s50, s100 = (res["hr_scenarios"][0.0], res["hr_scenarios"][50.0],
-                         res["hr_scenarios"][100.0])
-        ui.card_title("Чувствительность к сценарию V_hr", light=True)
-        m1, m2, m3 = st.columns(3)
-        m1.metric("ОСЭЭК_B при V_hr = 0", fmt(s0),
-                  delta=fmt(s0 - res["oseec_b"]), delta_color="normal")
-        m2.metric("ОСЭЭК_B при V_hr = 50", fmt(s50))
-        m3.metric("ОСЭЭК_B при V_hr = 100", fmt(s100),
-                  delta=fmt(s100 - res["oseec_b"]), delta_color="normal")
-        st.caption(
-            "Компания не представлена в рейтингах работодателей как "
-            "самостоятельное юридическое лицо: показан разброс итога при "
-            "крайних и центральном значениях сценарного диапазона."
-        )
-
-# --- Декомпозиция ----------------------------------------------------------
-with st.container(border=True):
-    ui.card_title("Декомпозиция оценки", light=True)
-    d1, d2 = st.columns([3, 2])
-    with d1:
-        st.caption("Компоненты и субиндексы, баллы")
-        st.plotly_chart(ui.fig_components(res), use_container_width=True,
-                        config=ui.PLOTLY_CONFIG)
-    with d2:
-        st.caption("Структура ядра индекса")
-        st.plotly_chart(ui.fig_core_structure(res), use_container_width=True,
-                        config=ui.PLOTLY_CONFIG)
-        st.markdown(
-            f"""
-            <div class="oseec-form">I<sub>Core</sub> = 0,6 × {fmt(res['m_stab'])}
-            + 0,4 × {fmt(res['s_rep'])} = <b>{fmt(res['i_core'])}</b></div>
-            """,
-            unsafe_allow_html=True)
-        if "oseec_e" in res:
+        ui.card_title("Итоговое значение индекса", subtitle, result=True)
+        gcol, tcol = st.columns([1, 1.15], vertical_alignment="center")
+        with gcol:
+            st.plotly_chart(ui.fig_gauge(res["oseec_b"], res["level"]),
+                            use_container_width=True, config=ui.PLOTLY_CONFIG)
+        with tcol:
+            econtour = ""
+            if "oseec_e" in res:
+                econtour = (
+                    f"<div class='oseec-econtour'>Расширенный контур: "
+                    f"ОСЭЭК<sub>E</sub> = ОСЭЭК<sub>B</sub> × {fmt(res['k_eff'])} "
+                    f"= <b>{fmt(res['oseec_e'])}</b> балла — "
+                    f"{res['level_e_name'].lower()} уровень</div>")
             st.markdown(
                 f"""
-                <div class="oseec-form">K<sub>eff</sub> = 1 + {fmt(ext.k_roi)} +
-                {fmt(ext.k_sroi)} + {fmt(ext.k_budget)} =
-                <b>{fmt(res['k_eff'])}</b></div>
+                <div class="oseec-hlabel">ОСЭЭК базового контура</div>
+                <div class="oseec-hnum">{fmt(res['oseec_b'])}<span> балла</span></div>
+                <div>{ui.level_chip(res['level'],
+                                    LEVEL_NAMES[res['level']] + ' уровень')}</div>
+                <div class="oseec-form" style="margin-top:0.8rem;">
+                  ОСЭЭК<sub>B</sub> = I<sub>Core</sub> × K<sub>risk</sub> ×
+                  K<sub>scale</sub> = {fmt(res['i_core'])} × {fmt(res['k_risk'])} ×
+                  {fmt(res['k_scale'])} = <b>{fmt(res['oseec_b'])}</b>
+                </div>
+                {econtour}
                 """,
                 unsafe_allow_html=True)
 
-    if res.get("i_media") is not None:
-        st.caption(
-            f"Медийный блок: I_media = {fmt(res['i_media'])}, V_vol = "
-            f"{fmt(res['v_vol'])}, M_stab = I_media / (1 + V_vol) = "
-            f"{fmt(res['m_stab'])}."
-            + (f" Корпус: {res['n_total']} публикаций, из них негативных — "
-               f"{res['n_neg']}." if res.get("n_total") else ""))
+        scen_points = None
+        if res.get("hr_scenarios"):
+            scen_points = {f"V_hr = {int(k)}": v
+                           for k, v in res["hr_scenarios"].items()}
+        st.plotly_chart(
+            ui.fig_scale(res["oseec_b"], res.get("oseec_e"), scen_points),
+            use_container_width=True, config=ui.PLOTLY_CONFIG)
 
-# --- Выгрузка и переходы ----------------------------------------------------
-b1, b2, _ = st.columns([1.2, 1.2, 2])
-with b1:
-    st.download_button(
-        "Скачать протокол расчета (Word)",
-        data=build_report(res, company, base),
-        file_name="Протокол_расчета_ОСЭЭК.docx",
-        mime=("application/vnd.openxmlformats-officedocument"
-              ".wordprocessingml.document"),
-        type="primary",
-        use_container_width=True)
-with b2:
-    if st.button("Проверить устойчивость результата", use_container_width=True):
-        st.switch_page("page_mc.py")
+    # --- Критические ограничения и примечания ----------------------------------
+    if res["critical"] or res["notes"]:
+        with st.container(border=True):
+            ui.card_title("Диагностические статусы и примечания")
+            if res["critical"]:
+                items = "".join(
+                    f"<div class='oseec-crit'><b>Критическое ограничение:</b> "
+                    f"{kind} «{name}» — {fmt(val)} балла при пороговом уровне "
+                    f"{'40' if kind == 'субиндекс' else '30'} баллов.</div>"
+                    for kind, name, val in res["critical"])
+                st.markdown(items, unsafe_allow_html=True)
+                st.caption(
+                    "Расчетная величина индекса при присвоении статуса не "
+                    "изменяется: слабый результат уже отражен в формуле. Статус "
+                    "дополняет качественную характеристику оценки указанием на "
+                    "проблемную зону."
+                )
+            for note in res["notes"]:
+                st.markdown(f"<div class='oseec-note'>{note}</div>",
+                            unsafe_allow_html=True)
+
+    # --- Сценарный диапазон V_hr -----------------------------------------------
+    if res.get("hr_scenarios"):
+        with st.container(border=True):
+            s0, s50, s100 = (res["hr_scenarios"][0.0], res["hr_scenarios"][50.0],
+                             res["hr_scenarios"][100.0])
+            ui.card_title("Чувствительность к сценарию V_hr")
+            m1, m2, m3 = st.columns(3)
+            m1.metric("ОСЭЭК_B при V_hr = 0", fmt(s0),
+                      delta=fmt(s0 - res["oseec_b"]), delta_color="normal")
+            m2.metric("ОСЭЭК_B при V_hr = 50", fmt(s50))
+            m3.metric("ОСЭЭК_B при V_hr = 100", fmt(s100),
+                      delta=fmt(s100 - res["oseec_b"]), delta_color="normal")
+            st.caption(
+                "Компания не представлена в рейтингах работодателей как "
+                "самостоятельное юридическое лицо: показан разброс итога при "
+                "крайних и центральном значениях сценарного диапазона."
+            )
+
+    # --- Декомпозиция ----------------------------------------------------------
+    with st.container(border=True):
+        ui.card_title("Декомпозиция оценки")
+        d1, d2 = st.columns([3, 2])
+        with d1:
+            st.caption("Компоненты и субиндексы, баллы")
+            st.plotly_chart(ui.fig_components(res), use_container_width=True,
+                            config=ui.PLOTLY_CONFIG)
+        with d2:
+            st.caption("Структура ядра индекса")
+            st.plotly_chart(ui.fig_core_structure(res), use_container_width=True,
+                            config=ui.PLOTLY_CONFIG)
+            st.markdown(
+                f"""
+                <div class="oseec-form">I<sub>Core</sub> = 0,6 × {fmt(res['m_stab'])}
+                + 0,4 × {fmt(res['s_rep'])} = <b>{fmt(res['i_core'])}</b></div>
+                """,
+                unsafe_allow_html=True)
+            if "oseec_e" in res:
+                st.markdown(
+                    f"""
+                    <div class="oseec-form">K<sub>eff</sub> = 1 + {fmt(ext.k_roi)} +
+                    {fmt(ext.k_sroi)} + {fmt(ext.k_budget)} =
+                    <b>{fmt(res['k_eff'])}</b></div>
+                    """,
+                    unsafe_allow_html=True)
+
+        if res.get("i_media") is not None:
+            st.caption(
+                f"Медийный блок: I_media = {fmt(res['i_media'])}, V_vol = "
+                f"{fmt(res['v_vol'])}, M_stab = I_media / (1 + V_vol) = "
+                f"{fmt(res['m_stab'])}."
+                + (f" Корпус: {res['n_total']} публикаций, из них негативных — "
+                   f"{res['n_neg']}." if res.get("n_total") else ""))
+
+    # --- Выгрузка и переходы ----------------------------------------------------
+    b1, b2, _ = st.columns([1.2, 1.2, 2])
+    with b1:
+        st.download_button(
+            "Скачать протокол расчета (Word)",
+            data=build_report(res, company, base),
+            file_name="Протокол_расчета_ОСЭЭК.docx",
+            mime=("application/vnd.openxmlformats-officedocument"
+                  ".wordprocessingml.document"),
+            type="primary",
+            use_container_width=True)
+    with b2:
+        if st.button("Проверить устойчивость результата", use_container_width=True):
+            st.switch_page("page_mc.py")

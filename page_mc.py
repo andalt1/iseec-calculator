@@ -90,7 +90,7 @@ mc = st.session_state.get("mc_custom_result")
 meta = st.session_state.get("mc_custom_meta")
 if mc and meta:
   with st.container(border=True):
-    ui.card_title("Итоги имитационного прогона", light=True)
+    ui.section_band("Итоги имитационного прогона", meta["company"])
     if abs(meta["base_val"] - res["oseec_b"]) > 1e-9:
         st.markdown(
             "<div class='oseec-note'>Данные в калькуляторе изменились после "
