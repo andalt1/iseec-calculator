@@ -313,7 +313,9 @@ def compute(base: BaseInputs, ext: Optional[ExtInputs] = None) -> dict:
     ksc = K_SCALE_STEPS[base.k_scale_step]
     b_val = oseec_b(core, kr, ksc)
     r.update(s_rep=srep, i_core=core, k_risk=kr, k_scale=ksc, oseec_b=b_val)
-    r["level"] = level_of(b_val)
+    # Уровень присваивается значению в отображаемой точности (до сотых),
+    # чтобы качественная характеристика совпадала с показанным числом
+    r["level"] = level_of(round(b_val, 2))
     r["level_name"] = LEVEL_NAMES[r["level"]]
 
     if base.k_scale_step == "unknown":
@@ -330,10 +332,10 @@ def compute(base: BaseInputs, ext: Optional[ExtInputs] = None) -> dict:
             scen[v] = oseec_b(i_core(ms_r, s_alt), kr, ksc)
         r["hr_scenarios"] = scen
 
-    # --- Критические ограничения ------------------------------------------
+    # --- Критические ограничения (сопоставление в отображаемой точности) ---
     if ms_r < THR_SUBINDEX:
         r["critical"].append(("субиндекс", "медийная устойчивость", ms_r))
-    if srep < THR_SUBINDEX:
+    if round(srep, 2) < THR_SUBINDEX:
         r["critical"].append(("субиндекс", "социальная репутация", srep))
     if vhr_r < THR_COMPONENT:
         r["critical"].append(("компонент", "верификация HR-бренда", vhr_r))
@@ -347,7 +349,7 @@ def compute(base: BaseInputs, ext: Optional[ExtInputs] = None) -> dict:
         keff = k_eff(ext.k_roi, ext.k_sroi, ext.k_budget)
         r["k_eff"] = keff
         r["oseec_e"] = oseec_e(b_val, keff)
-        r["level_e"] = level_of(r["oseec_e"])
+        r["level_e"] = level_of(round(r["oseec_e"], 2))
         r["level_e_name"] = LEVEL_NAMES[r["level_e"]]
 
     return r
@@ -421,8 +423,17 @@ def run_mc_custom(m_stab_v: float, vhr_v: float,
     base_val = oseec_b(i_core(m_stab_v, s_base), k_risk_v, k_scale_v)
     base_lvl = level_of(base_val)
     base_crit_sub = m_stab_v < THR_SUBINDEX or s_base < THR_SUBINDEX
+    vhr_r = round(vhr_v, 2)
+    base_crit_set = (
+        m_stab_v < THR_SUBINDEX,
+        s_base < THR_SUBINDEX,
+        vhr_r < THR_COMPONENT,
+        round(rtr_base, 2) < THR_COMPONENT,
+        round(rin_base, 2) < THR_COMPONENT,
+    )
 
     keep = 0
+    keep_crit = 0
     levels_seen = set()
     vals = np.empty(n_iter)
     crit_sub_share = 0
@@ -432,6 +443,11 @@ def run_mc_custom(m_stab_v: float, vhr_v: float,
         w = rng.uniform(0.4, 0.7)
         b = tuple(x + rng.uniform(-MC_DELTA, MC_DELTA) for x in LEVEL_BOUNDS)
         th_sub = THR_SUBINDEX + rng.uniform(-MC_DELTA, MC_DELTA)
+        # Порог компонентов сдвигается тем же розыгрышем, что и порог
+        # субиндексов: дополнительное обращение к генератору изменило бы
+        # последовательность случайных чисел и нарушило воспроизводимость
+        # референсного прогона Б.12
+        th_comp = THR_COMPONENT + (th_sub - THR_SUBINDEX)
         flips = {key for key in disputed if rng.integers(0, 2)}
         kr = rng.uniform(kr_lo, kr_hi)
         ks = rng.uniform(ks_lo, ks_hi)
@@ -446,11 +462,21 @@ def run_mc_custom(m_stab_v: float, vhr_v: float,
             keep += 1
         if m_stab_v < th_sub or s_i < th_sub:
             crit_sub_share += 1
+        crit_set_i = (
+            m_stab_v < th_sub,
+            s_i < th_sub,
+            vhr_r < th_comp,
+            round(rtr_i, 2) < th_comp,
+            round(rin_i, 2) < th_comp,
+        )
+        if crit_set_i == base_crit_set:
+            keep_crit += 1
 
     return {
         "base_val": base_val,
         "base_level": base_lvl,
         "keep": keep / n_iter,
+        "keep_crit": keep_crit / n_iter,
         "levels_seen": sorted(levels_seen),
         "min": float(vals.min()),
         "max": float(vals.max()),
@@ -459,6 +485,7 @@ def run_mc_custom(m_stab_v: float, vhr_v: float,
         "w_draws": w_draws,
         "crit_sub_share": crit_sub_share / n_iter,
         "base_crit_sub": base_crit_sub,
+        "base_crit_set": base_crit_set,
         "k_risk_range": (kr_lo, kr_hi),
         "k_scale_range": (ks_lo, ks_hi),
     }

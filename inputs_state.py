@@ -56,7 +56,7 @@ DEFAULTS: dict = {
     "hr_scen": "Среднее значение диапазона — 50",
     "xfact": 0.0,
     "xref": 0.0,
-    "krisk": list(RISK_OPTIONS)[0],
+    "krisk": list(RISK_OPTIONS)[1],
     "kscale": list(SCALE_OPTIONS)[3],
     "ext_on": False,
     "kroi": list(ROI_OPTIONS)[0],

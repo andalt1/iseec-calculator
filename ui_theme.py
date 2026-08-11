@@ -422,7 +422,7 @@ def sidebar_footer() -> None:
           МГУ имени М.В. Ломоносова, факультет государственного управления<br><br>
           Свидетельство о государственной регистрации программы для ЭВМ
           № 2026663079 от 04.05.2026<br><br>
-          Версия 2.1 · август 2026
+          Версия 2.2 · август 2026
         </div>
         """,
         unsafe_allow_html=True,
@@ -510,11 +510,14 @@ def _base_layout(fig: go.Figure, height: int) -> go.Figure:
 
 
 def _level_bands(fig: go.Figure, y0: float, y1: float,
-                 labels: bool = True, yref: str = None) -> None:
+                 labels: bool = True, yref: str = None,
+                 max_x: float = None) -> None:
     names_short = ("критически низкий", "низкий", "средний", "высокий", "очень высокий")
     kw = {"yref": yref} if yref else {}
+    top = max(LEVEL_EDGES[5], max_x) if max_x else LEVEL_EDGES[5]
     for i in range(5):
-        x0, x1 = LEVEL_EDGES[i], LEVEL_EDGES[i + 1]
+        x0 = LEVEL_EDGES[i]
+        x1 = LEVEL_EDGES[i + 1] if i < 4 else top
         fig.add_shape(type="rect", x0=x0, x1=x1, y0=y0, y1=y1,
                       fillcolor=LEVEL_TINT[i], line=dict(width=0),
                       layer="below", **kw)
@@ -565,9 +568,13 @@ def fig_gauge(value: float, level_idx: int) -> go.Figure:
 
 def fig_scale(value: float, value_e: float = None,
               scenario_points: dict = None) -> go.Figure:
-    """Линейка шкалы интерпретации с маркером итогового значения."""
+    """Линейка шкалы интерпретации с маркером итогового значения.
+
+    Ось расширяется автоматически, если расширенный контур выходит за
+    отметку 116 (теоретический максимум ОСЭЭК_E составляет 144,375)."""
+    vmax = max(116.0, value + 4.0, (value_e or 0.0) + 4.0)
     fig = go.Figure()
-    _level_bands(fig, 0.0, 1.0)
+    _level_bands(fig, 0.0, 1.0, max_x=vmax)
     fig.add_shape(type="line", x0=value, x1=value, y0=-0.06, y1=1.06,
                   line=dict(color=NAVY, width=3))
     fig.add_trace(go.Scatter(
@@ -596,7 +603,7 @@ def fig_scale(value: float, value_e: float = None,
                             line=dict(color=GRAY, width=2)),
                 hovertemplate=f"{lbl}: {fmt(x)}<extra></extra>",
                 showlegend=False))
-    fig.update_xaxes(range=[0, 116], showgrid=False, zeroline=False,
+    fig.update_xaxes(range=[0, vmax], showgrid=False, zeroline=False,
                      tickvals=[0, 25, 50, 75, 100], ticks="outside",
                      tickcolor=LINE, tickfont=dict(size=11, color=GRAY))
     fig.update_yaxes(range=[-0.35, 1.45], visible=False, fixedrange=True)

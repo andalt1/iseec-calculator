@@ -44,7 +44,7 @@ def _kv_table(doc: Document, rows: list[tuple[str, str]]) -> None:
             r.font.bold = True
 
 
-def build_report(res: dict, company: str, base) -> bytes:
+def build_report(res: dict, company: str, base, ext=None) -> bytes:
     doc = Document()
     _style(doc)
 
@@ -150,6 +150,21 @@ def build_report(res: dict, company: str, base) -> bytes:
         doc.add_paragraph(
             f"Данные системы медиамониторинга: X_fact = {fmt(base.x_fact)}, "
             f"X_ref = {fmt(base.x_ref)}.")
+        doc.add_paragraph("Помесячные значения медиапоказателя (для "
+                          "коэффициента волатильности):")
+        t = doc.add_table(rows=2, cols=13)
+        t.style = "Table Grid"
+        t.rows[0].cells[0].text = "Месяц"
+        t.rows[1].cells[0].text = "Значение"
+        for i in range(12):
+            t.rows[0].cells[i + 1].text = MONTHS[i][:3]
+            t.rows[1].cells[i + 1].text = fmt(base.monthly_metric[i], 0)
+        for row in t.rows:
+            for c in row.cells:
+                for p in c.paragraphs:
+                    for r in p.runs:
+                        r.font.size = Pt(10)
+                        r.font.name = "Times New Roman"
     else:
         doc.add_paragraph(
             "Публикации, атрибутированные к юридическому лицу, отсутствуют — "
@@ -170,6 +185,28 @@ def build_report(res: dict, company: str, base) -> bytes:
     doc.add_paragraph("Чек-лист институциональной зрелости, блок "
                       "институционального закрепления: "
                       + _mark(INST_BLOCK2, base.inst_b2) + ".")
+
+    if base.hr_in_rating:
+        doc.add_paragraph(
+            f"Рейтинг работодателей: позиция {base.hr_rank} из "
+            f"{base.hr_total} участников; компонент V_hr рассчитан по "
+            "формуле (5).")
+    else:
+        doc.add_paragraph(
+            "Компания не представлена в рейтингах работодателей как "
+            "самостоятельное юридическое лицо; применен сценарный подход, "
+            f"выбранное значение V_hr = {fmt(float(base.hr_scenario))}.")
+
+    if ext is not None and getattr(ext, "enabled", False):
+        doc.add_paragraph(
+            f"Расширенный контур: k_roi = {fmt(ext.k_roi)}, "
+            f"k_sroi = {fmt(ext.k_sroi)}, k_budget = {fmt(ext.k_budget)}; "
+            "K_eff = 1 + k_roi + k_sroi + k_budget.")
+
+    if res.get("notes"):
+        doc.add_heading("Примечания расчета", level=2)
+        for n in res["notes"]:
+            doc.add_paragraph(n, style="List Bullet")
 
     note = doc.add_paragraph(
         "Расчет выполнен онлайн-калькулятором ОСЭЭК по формулам (1)–(11) "

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Страница «Калькулятор» — расчет индекса ОСЭЭК по данным пользователя."""
 
+import html
+import time
+
 import streamlit as st
 
 import dadata_api
@@ -29,6 +32,10 @@ def _do_lookup() -> None:
     if not st.session_state.get("c_inn", "").strip():
         st.session_state["c_info"] = None
         return
+    now = time.time()
+    if now - st.session_state.get("_last_lookup_ts", 0.0) < 2.0:
+        return
+    st.session_state["_last_lookup_ts"] = now
     info = dadata_api.lookup_inn(st.session_state.get("c_inn", ""))
     st.session_state["c_info"] = info
     if "error" in info:
@@ -69,16 +76,20 @@ with st.container(border=True):
     info = st.session_state.get("c_info")
     if info:
         if "error" in info:
-            st.markdown(f"<div class='oseec-note'>{info['error']}</div>",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='oseec-note'>{html.escape(str(info['error']))}"
+                "</div>",
+                unsafe_allow_html=True)
         else:
-            parts = [f"<b>{info['full_name']}</b>", f"ИНН {info['inn']}"]
+            parts = [f"<b>{html.escape(str(info['full_name']))}</b>",
+                     f"ИНН {html.escape(str(info['inn']))}"]
             if info.get("okved"):
-                sec = (f" — {info['okved_section']}"
+                sec = (f" — {html.escape(str(info['okved_section']))}"
                        if info.get("okved_section") else "")
-                parts.append(f"основной ОКВЭД {info['okved']}{sec}")
+                parts.append(
+                    f"основной ОКВЭД {html.escape(str(info['okved']))}{sec}")
             if info.get("region"):
-                parts.append(info["region"])
+                parts.append(html.escape(str(info["region"])))
             if (isinstance(info.get("employee_count"), int)
                     and info["employee_count"] > 0):
                 parts.append(
@@ -146,6 +157,24 @@ with st.container(border=True):
                     st.number_input("из них негативных", min_value=0,
                                     max_value=1000, step=1, key=f"mn{i}",
                                     label_visibility="visible")
+        _tot_all = sum(int(st.session_state[f"mt{i}"]) for i in range(12))
+        _over = [oc.MONTHS[i] for i in range(12)
+                 if int(st.session_state[f"mn{i}"])
+                 > int(st.session_state[f"mt{i}"])]
+        if _tot_all > 100:
+            st.markdown(
+                f"<div class='oseec-note'><b>Проверьте объем корпуса.</b> "
+                f"Введено {_tot_all} публикаций, тогда как методика "
+                "предусматривает верифицированный корпус объемом до 100 "
+                "уникальных материалов за отчетный год; более крупные массивы "
+                "сокращаются до этого объема по протоколу кодирования.</div>",
+                unsafe_allow_html=True)
+        if _over:
+            st.markdown(
+                "<div class='oseec-note'><b>Негативных больше, чем всего "
+                "публикаций</b> — в расчет негативные приняты равными общему "
+                "числу месяца: " + ", ".join(_over) + ".</div>",
+                unsafe_allow_html=True)
     elif track == inp.TRACK_MONITOR:
         c1, c2 = st.columns(2)
         with c1:
@@ -341,7 +370,8 @@ ext = inp.collect_ext_inputs()
 res = oc.compute(base, ext)
 
 company = st.session_state["c_name"].strip()
-subtitle = ("базовый контур · " + company) if company else \
+company_html = html.escape(company)
+subtitle = ("базовый контур · " + company_html) if company else \
     "базовый контур — внешняя оценка по открытым источникам"
 
 # --- До ввода данных результаты не показываются -----------------------------
@@ -354,6 +384,20 @@ if not inp.has_input_data(base):
             "«Демонстрационный пример» в карточке «Объект оценки» — форма "
             "заполнится данными условной компании. После этого здесь "
             "появится кнопка «Рассчитать индекс».</div>",
+            unsafe_allow_html=True)
+    st.stop()
+
+# --- Для мониторинга обязателен отраслевой эталон ----------------------------
+if base.media_track == "monitoring" and base.x_ref <= 0:
+    with st.container(border=True):
+        ui.card_title("Результаты расчета",
+                      "не хватает отраслевого эталона")
+        st.markdown(
+            "<div class='oseec-note'>Для расчета по данным системы "
+            "мониторинга укажите отраслевой эталон X_ref — без него формула "
+            "(1) неприменима. Эталон определяется как среднее арифметическое "
+            "пиковых значений трех крупнейших компаний отрасли за последние "
+            "три года по данным той же системы мониторинга.</div>",
             unsafe_allow_html=True)
     st.stop()
 
@@ -495,7 +539,7 @@ with st.container(border=True):
     with b1:
         st.download_button(
             "Скачать протокол расчета (Word)",
-            data=build_report(res, company, base),
+            data=build_report(res, company, base, ext),
             file_name="Протокол_расчета_ОСЭЭК.docx",
             mime=("application/vnd.openxmlformats-officedocument"
                   ".wordprocessingml.document"),

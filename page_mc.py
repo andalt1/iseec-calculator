@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Страница «Проверка устойчивости» — имитационное моделирование Монте-Карло."""
 
+import html
+
 import streamlit as st
 
 import inputs_state as inp
@@ -57,7 +59,8 @@ if not (inp.has_input_data(base)
 with st.container(border=True):
     ui.card_title("Объект проверки и параметры прогона")
     st.markdown(
-        f"<div class='oseec-note'>Проверяется расчет «<b>{company}</b>»: "
+        f"<div class='oseec-note'>Проверяется расчет "
+        f"«<b>{html.escape(company)}</b>»: "
         f"ОСЭЭК<sub>B</sub> = <b>{fmt(res['oseec_b'])}</b> балла, уровень — "
         f"{res['level_name'].lower()}. Исходные данные берутся из раздела "
         "«Калькулятор» — для проверки другого объекта измените их там.</div>",
@@ -84,6 +87,13 @@ with st.container(border=True):
              "индикатора меняется на противоположное с вероятностью 0,5.")
     disputed = [(k.split(":")[0], int(k.split(":")[1])) for k in chosen]
 
+    # Отпечаток исходных данных: по нему определяется устаревание прогона
+    fingerprint = (res["m_stab"], res["v_hr"],
+                   tuple(base.transp_b1), tuple(base.transp_b2),
+                   tuple(base.inst_b1), tuple(base.inst_b2),
+                   res["k_risk"], res["k_scale"],
+                   tuple(sorted(chosen)))
+
     if st.button("Выполнить имитационный прогон", type="primary"):
         with st.spinner("Выполняется 10 000 итераций..."):
             mc = oc.run_mc_custom(
@@ -95,25 +105,41 @@ with st.container(border=True):
         st.session_state["mc_custom_result"] = mc
         st.session_state["mc_custom_meta"] = {
             "company": company, "base_val": res["oseec_b"],
-            "level": res["level"], "disputed_n": len(disputed)}
+            "level": res["level"], "disputed_n": len(disputed),
+            "fp": fingerprint}
 
 mc = st.session_state.get("mc_custom_result")
 meta = st.session_state.get("mc_custom_meta")
 if mc and meta:
   with st.container(border=True):
-    ui.section_band("Итоги имитационного прогона", meta["company"])
+    ui.section_band("Итоги имитационного прогона",
+                    html.escape(meta["company"]))
     with st.container(border=True):
         ui.card_title("Сводные показатели прогона", light=True)
-        if abs(meta["base_val"] - res["oseec_b"]) > 1e-9:
+        if meta.get("fp") != fingerprint:
             st.markdown(
-                "<div class='oseec-note'>Данные в калькуляторе изменились после "
-                "последнего прогона — выполните прогон заново.</div>",
+                "<div class='oseec-note'>Данные в калькуляторе или состав "
+                "спорных индикаторов изменились после последнего прогона — "
+                "выполните прогон заново.</div>",
                 unsafe_allow_html=True)
         r1, r2, r3, r4 = st.columns(4)
         r1.metric("Сохранение базового уровня", fmt(mc["keep"] * 100, 1) + " %")
         r2.metric("Размах значений", f"{fmt(mc['min'])}–{fmt(mc['max'])}")
         r3.metric("Медиана", fmt(mc["median"]))
         r4.metric("Наблюдавшиеся уровни", str(len(mc["levels_seen"])))
+        r5, r6 = st.columns([1, 1])
+        r5.metric(
+            "Сохранение выводов о слабых компонентах",
+            fmt(mc.get("keep_crit", 0.0) * 100, 1) + " %",
+            help="Доля итераций, в которых набор критических статусов "
+                 "(субиндексы ниже порога 40 баллов, компоненты ниже порога "
+                 "30 баллов; оба порога сдвигаются согласованно в пределах "
+                 "2,5 балла) совпадает с базовым расчетом.")
+        r6.metric(
+            "Итерации с критическим субиндексом",
+            fmt(mc.get("crit_sub_share", 0.0) * 100, 1) + " %",
+            help="Доля итераций, в которых хотя бы один субиндекс оказывается "
+                 "ниже варьируемого порога критических ограничений.")
 
         chips = " ".join(ui.level_chip(i) for i in mc["levels_seen"])
         st.markdown(
