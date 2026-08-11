@@ -21,6 +21,10 @@ ui.lead(
 )
 
 
+def _run_calc() -> None:
+    st.session_state["show_results"] = True
+
+
 def _do_lookup() -> None:
     if not st.session_state.get("c_inn", "").strip():
         st.session_state["c_info"] = None
@@ -345,14 +349,43 @@ company = st.session_state["c_name"].strip()
 subtitle = ("базовый контур · " + company) if company else \
     "базовый контур — внешняя оценка по открытым источникам"
 
-# --- Зона результатов: синее полотно-подложка -------------------------------
+# --- До ввода данных результаты не показываются -----------------------------
+if not inp.has_input_data(base):
+    with st.container(border=True):
+        ui.card_title("Результаты расчета",
+                      "появятся после ввода данных и запуска расчета")
+        st.markdown(
+            "<div class='oseec-note'>Заполните шаги 1–4 вручную или нажмите "
+            "«Демонстрационный пример» в карточке «Объект оценки» — форма "
+            "заполнится данными условной компании. После этого здесь "
+            "появится кнопка «Рассчитать индекс».</div>",
+            unsafe_allow_html=True)
+    st.stop()
+
+# --- Результат раскрывается по нажатию кнопки --------------------------------
+if not st.session_state["show_results"]:
+    with st.container(border=True):
+        ui.card_title("Результаты расчета",
+                      "данные заполнены — можно выполнять расчет")
+        st.markdown(
+            "<div class='oseec-note'>Данные шагов введены. По нажатию кнопки "
+            "калькулятор рассчитает субиндексы, поправочные коэффициенты и "
+            "итоговое значение ОСЭЭК, построит декомпозицию оценки и "
+            "подготовит протокол расчета. При последующем изменении данных "
+            "результат пересчитывается сразу.</div>",
+            unsafe_allow_html=True)
+        st.button("Рассчитать индекс", type="primary", on_click=_run_calc)
+    st.stop()
+
+# --- Зона результатов: теплое полотно ----------------------------------------
 with st.container(border=True):
     ui.section_band("Результаты расчета",
                     "обновляются автоматически при изменении данных")
 
     # --- Панель итога: спидометр + значение ------------------------------------
     with st.container(border=True):
-        ui.card_title("Итоговое значение индекса", subtitle, result=True)
+        ui.card_title("Итоговое значение индекса", subtitle, light=True,
+                      result=True)
         gcol, tcol = st.columns([1, 1.15], vertical_alignment="center")
         with gcol:
             st.plotly_chart(ui.fig_gauge(res["oseec_b"], res["level"]),
@@ -391,7 +424,7 @@ with st.container(border=True):
     # --- Критические ограничения и примечания ----------------------------------
     if res["critical"] or res["notes"]:
         with st.container(border=True):
-            ui.card_title("Диагностические статусы и примечания")
+            ui.card_title("Диагностические статусы и примечания", light=True)
             if res["critical"]:
                 items = "".join(
                     f"<div class='oseec-crit'><b>Критическое ограничение:</b> "
@@ -414,7 +447,7 @@ with st.container(border=True):
         with st.container(border=True):
             s0, s50, s100 = (res["hr_scenarios"][0.0], res["hr_scenarios"][50.0],
                              res["hr_scenarios"][100.0])
-            ui.card_title("Чувствительность к сценарию V_hr")
+            ui.card_title("Чувствительность к сценарию V_hr", light=True)
             m1, m2, m3 = st.columns(3)
             m1.metric("ОСЭЭК_B при V_hr = 0", fmt(s0),
                       delta=fmt(s0 - res["oseec_b"]), delta_color="normal")
@@ -429,7 +462,7 @@ with st.container(border=True):
 
     # --- Декомпозиция ----------------------------------------------------------
     with st.container(border=True):
-        ui.card_title("Декомпозиция оценки")
+        ui.card_title("Декомпозиция оценки", light=True)
         d1, d2 = st.columns([3, 2])
         with d1:
             st.caption("Компоненты и субиндексы, баллы")

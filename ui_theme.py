@@ -147,36 +147,35 @@ h3 { font-size: 1.12rem !important; font-weight: 700 !important; }
     max-width: 46%;
 }
 .oseec-plate.light {
-    background: #E3EBFA;
+    background: #F1DFB6;
 }
 .oseec-plate.light .txt { color: #012169; }
 .oseec-plate.light .num {
     background: #FFFFFF;
-    border-color: #012169;
-    color: #012169;
+    border-color: #B08D3E;
+    color: #7A5A1A;
 }
-.oseec-plate.light .sub { color: #5A6B8C; }
+.oseec-plate.light .sub { color: #8A6B3F; }
 
-/* --- Шапка зоны результатов (полоса во всю ширину зоны) -------------------- */
+/* --- Шапка зоны результатов: заголовок с золотистым подчеркиванием --------- */
 .oseec-band {
     display: flex;
     align-items: baseline;
     gap: 0.9rem;
     flex-wrap: wrap;
-    background: linear-gradient(120deg, #012169 0%, #1D4396 100%);
-    border-radius: 15px 15px 0 0;
-    padding: 0.8rem 1.35rem;
-    margin: -1.05rem -1.1rem 0.85rem -1.1rem;
+    padding: 0.15rem 0.3rem 0.45rem 0.3rem;
+    border-bottom: 2px solid #D9BC7C;
+    margin: 0 0 0.9rem 0;
 }
 .oseec-band .txt {
     font-family: 'PT Serif', Georgia, serif;
     font-weight: 700;
-    font-size: 1.32rem;
-    color: #FFFFFF;
+    font-size: 1.42rem;
+    color: #012169;
 }
 .oseec-band .sub {
     font-size: 0.85rem;
-    color: #C3D2F0;
+    color: #8A6B3F;
     margin-left: auto;
 }
 
@@ -286,23 +285,24 @@ div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .
 div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate.z) {
     background: #F0F5FC;
 }
-/* Панель итога: заливка и усиленная рамка */
+/* Панель итога: заливка и усиленная рамка в теплой гамме зоны */
 div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-plate.result) {
-    background: linear-gradient(180deg, #FFFFFF 0%, #EDF3FC 100%) !important;
-    border: 1px solid #A9BFE2 !important;
-    box-shadow: 0 4px 16px rgba(1, 33, 105, 0.13);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FDF7EA 100%) !important;
+    border: 1px solid #D9BC7C !important;
+    box-shadow: 0 4px 14px rgba(146, 106, 26, 0.18);
 }
-/* Зона результатов: сплошное синее полотно-подложка с шапкой-полосой.
-   Зоной считается контейнер, первым элементом которого идет .oseec-band */
+/* Зона результатов: теплое кремовое полотно — температурный контраст к
+   сине-белой зоне ввода. Зоной считается контейнер, первым элементом
+   которого идет .oseec-band */
 div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-band) {
-    background: #DDE7F7 !important;
-    border: 1px solid #B9CCE9 !important;
-    border-radius: 16px !important;
-    padding: 1.05rem 1.1rem 1.1rem 1.1rem !important;
-    box-shadow: inset 0 1px 4px rgba(1, 33, 105, 0.05);
+    background: #F7EDD8 !important;
+    border: 1px solid #DFC58F !important;
+    border-radius: 18px !important;
+    padding: 1.0rem 1.1rem 1.2rem 1.1rem !important;
+    box-shadow: 0 6px 20px rgba(146, 106, 26, 0.16);
 }
 div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stVerticalBlock"] > div[data-testid="stElementContainer"] .oseec-band) {
-    margin: 1.5rem 0 1.05rem 0;
+    margin: 1.6rem 0 1.05rem 0;
 }
 /* Английские подсказки Press Enter to apply у полей скрываем */
 [data-testid="InputInstructions"] { display: none; }
@@ -330,7 +330,7 @@ div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stVerticalBlock"] > di
     margin-top: 0.7rem;
     font-size: 0.95rem;
     color: #232830;
-    background: #EDF2FA;
+    background: #F7EFDC;
     border-radius: 8px;
     padding: 0.5rem 0.8rem;
 }
@@ -381,11 +381,11 @@ thead tr th {
         flex-basis: 100%;
     }
     div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .oseec-band) {
-        padding: 0.85rem 0.7rem 0.75rem 0.7rem !important;
+        padding: 0.8rem 0.75rem 0.9rem 0.75rem !important;
     }
     .oseec-band {
-        padding: 0.7rem 0.95rem;
-        margin: -0.85rem -0.7rem 0.7rem -0.7rem;
+        padding: 0.1rem 0.15rem 0.35rem 0.15rem;
+        margin: 0 0 0.7rem 0;
     }
     .oseec-band .sub { margin-left: 0; flex-basis: 100%; }
 }

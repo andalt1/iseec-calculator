@@ -62,6 +62,7 @@ DEFAULTS: dict = {
     "kroi": list(ROI_OPTIONS)[0],
     "ksroi": list(SROI_OPTIONS)[0],
     "kbud": list(BUDGET_OPTIONS)[1],
+    "show_results": False,
 }
 for _i in range(12):
     DEFAULTS[f"mt{_i}"] = 0
@@ -120,6 +121,24 @@ def collect_base_inputs() -> BaseInputs:
     )
 
 
+def has_input_data(base: BaseInputs) -> bool:
+    """Проверяет, введены ли содержательные данные для расчета.
+
+    Пустая форма не образует осмысленной оценки, вследствие чего блок
+    результатов до появления данных заменяется приглашением к вводу.
+    """
+    if base.media_track == "none":
+        return True
+    if base.media_track == "manual" and sum(base.monthly_total) > 0:
+        return True
+    if base.media_track == "monitoring" and (base.x_fact > 0
+                                             or base.x_ref > 0):
+        return True
+    checklist = (sum(base.transp_b1) + sum(base.transp_b2)
+                 + sum(base.inst_b1) + sum(base.inst_b2))
+    return checklist > 0
+
+
 def collect_ext_inputs() -> ExtInputs:
     ss = st.session_state
     return ExtInputs(
@@ -134,9 +153,10 @@ def load_demo_into_state() -> None:
     """Заполняет калькулятор демонстрационным примером с условными данными."""
     p = DEMO_EXAMPLE
     ss = st.session_state
-    ss["c_name"] = "Условная компания (демонстрационный пример)"
+    ss["c_name"] = "ПАО «Прогресс» (условная компания)"
     ss["c_inn"] = ""
     ss["c_info"] = None
+    ss["show_results"] = False
     ss["c_track"] = {"manual": TRACK_MANUAL, "monitoring": TRACK_MONITOR,
                      "none": TRACK_NONE}[p["media_track"]]
     for i in range(12):

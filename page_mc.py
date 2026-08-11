@@ -42,6 +42,17 @@ base = inp.collect_base_inputs()
 res = oc.compute(base)
 company = st.session_state["c_name"].strip() or "текущий расчет"
 
+# --- Без выполненного расчета проверять нечего ------------------------------
+if not (inp.has_input_data(base)
+        and st.session_state.get("show_results")):
+    st.markdown(
+        "<div class='oseec-note'>Расчет в разделе «Калькулятор» еще не "
+        "выполнен: заполните шаги вручную или загрузите демонстрационный "
+        "пример и нажмите «Рассчитать индекс» — результаты передаются сюда "
+        "автоматически.</div>",
+        unsafe_allow_html=True)
+    st.stop()
+
 # --- Объект проверки и запуск прогона --------------------------------------
 with st.container(border=True):
     ui.card_title("Объект проверки и параметры прогона")
@@ -91,52 +102,54 @@ meta = st.session_state.get("mc_custom_meta")
 if mc and meta:
   with st.container(border=True):
     ui.section_band("Итоги имитационного прогона", meta["company"])
-    if abs(meta["base_val"] - res["oseec_b"]) > 1e-9:
-        st.markdown(
-            "<div class='oseec-note'>Данные в калькуляторе изменились после "
-            "последнего прогона — выполните прогон заново.</div>",
-            unsafe_allow_html=True)
-    r1, r2, r3, r4 = st.columns(4)
-    r1.metric("Сохранение базового уровня", fmt(mc["keep"] * 100, 1) + " %")
-    r2.metric("Размах значений", f"{fmt(mc['min'])}–{fmt(mc['max'])}")
-    r3.metric("Медиана", fmt(mc["median"]))
-    r4.metric("Наблюдавшиеся уровни", str(len(mc["levels_seen"])))
-
-    chips = " ".join(ui.level_chip(i) for i in mc["levels_seen"])
-    st.markdown(
-        f"<div style='margin:0.25rem 0 0.6rem 0'>Уровни в итерациях "
-        f"прогона: {chips}</div>", unsafe_allow_html=True)
-
-    st.plotly_chart(
-        ui.fig_mc_hist(mc["values"], meta["base_val"], mc["median"]),
-        use_container_width=True, config=ui.PLOTLY_CONFIG)
-
-    keep_pct = mc["keep"] * 100
-    if keep_pct >= 90:
-        verdict = ("Качественный уровень сохраняется в подавляющем "
-                   "большинстве итераций: вывод о положении объекта на "
-                   "шкале слабо чувствителен к вариации параметров модели "
-                   "в заданных диапазонах.")
-    elif keep_pct >= 66:
-        verdict = ("Качественный уровень сохраняется в большинстве "
-                   "итераций, однако доля переходов заметна: оценка "
-                   "находится вблизи границы уровней, и ее интерпретацию "
-                   "уместно сопровождать указанием на пограничное "
-                   "положение.")
-    else:
-        verdict = ("Существенная доля итераций дает смену качественного "
-                   "уровня: итоговый вывод чувствителен к выбранным "
-                   "параметрам модели, и дальнейшее сопоставление уместно "
-                   "сопровождать указанием на это методологическое "
-                   "ограничение.")
-    st.markdown(f"<div class='oseec-note'>{verdict}</div>",
+    with st.container(border=True):
+        ui.card_title("Сводные показатели прогона", light=True)
+        if abs(meta["base_val"] - res["oseec_b"]) > 1e-9:
+            st.markdown(
+                "<div class='oseec-note'>Данные в калькуляторе изменились после "
+                "последнего прогона — выполните прогон заново.</div>",
                 unsafe_allow_html=True)
-    st.caption(
-        f"Диапазоны варьирования: вес ядра 0,4–0,7; границы уровней и "
-        f"порог ограничений ± 2,5 балла; K_risk "
-        f"{fmt(mc['k_risk_range'][0])}–{fmt(mc['k_risk_range'][1])}; "
-        f"K_scale {fmt(mc['k_scale_range'][0])}–"
-        f"{fmt(mc['k_scale_range'][1])}; спорных индикаторов — "
-        f"{meta['disputed_n']}. Начальное значение генератора фиксировано "
-        f"({oc.MC_SEED}), результаты воспроизводимы."
-    )
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Сохранение базового уровня", fmt(mc["keep"] * 100, 1) + " %")
+        r2.metric("Размах значений", f"{fmt(mc['min'])}–{fmt(mc['max'])}")
+        r3.metric("Медиана", fmt(mc["median"]))
+        r4.metric("Наблюдавшиеся уровни", str(len(mc["levels_seen"])))
+
+        chips = " ".join(ui.level_chip(i) for i in mc["levels_seen"])
+        st.markdown(
+            f"<div style='margin:0.25rem 0 0.6rem 0'>Уровни в итерациях "
+            f"прогона: {chips}</div>", unsafe_allow_html=True)
+
+        st.plotly_chart(
+            ui.fig_mc_hist(mc["values"], meta["base_val"], mc["median"]),
+            use_container_width=True, config=ui.PLOTLY_CONFIG)
+
+        keep_pct = mc["keep"] * 100
+        if keep_pct >= 90:
+            verdict = ("Качественный уровень сохраняется в подавляющем "
+                       "большинстве итераций: вывод о положении объекта на "
+                       "шкале слабо чувствителен к вариации параметров модели "
+                       "в заданных диапазонах.")
+        elif keep_pct >= 66:
+            verdict = ("Качественный уровень сохраняется в большинстве "
+                       "итераций, однако доля переходов заметна: оценка "
+                       "находится вблизи границы уровней, и ее интерпретацию "
+                       "уместно сопровождать указанием на пограничное "
+                       "положение.")
+        else:
+            verdict = ("Существенная доля итераций дает смену качественного "
+                       "уровня: итоговый вывод чувствителен к выбранным "
+                       "параметрам модели, и дальнейшее сопоставление уместно "
+                       "сопровождать указанием на это методологическое "
+                       "ограничение.")
+        st.markdown(f"<div class='oseec-note'>{verdict}</div>",
+                    unsafe_allow_html=True)
+        st.caption(
+            f"Диапазоны варьирования: вес ядра 0,4–0,7; границы уровней и "
+            f"порог ограничений ± 2,5 балла; K_risk "
+            f"{fmt(mc['k_risk_range'][0])}–{fmt(mc['k_risk_range'][1])}; "
+            f"K_scale {fmt(mc['k_scale_range'][0])}–"
+            f"{fmt(mc['k_scale_range'][1])}; спорных индикаторов — "
+            f"{meta['disputed_n']}. Начальное значение генератора фиксировано "
+            f"({oc.MC_SEED}), результаты воспроизводимы."
+        )
