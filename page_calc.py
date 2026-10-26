@@ -413,7 +413,11 @@ if not st.session_state["show_results"]:
             "подготовит протокол расчета. При последующем изменении данных "
             "результат пересчитывается сразу.</div>",
             unsafe_allow_html=True)
-        st.button("Рассчитать индекс", type="primary", on_click=_run_calc)
+        # Главная кнопка страницы – во всю ширину карточки, оформление
+        # задано в ui_theme по ключу (.st-key-calc_btn)
+        st.button("Рассчитать индекс", type="primary", on_click=_run_calc,
+                  icon=":material/calculate:", key="calc_btn",
+                  use_container_width=True)
     st.stop()
 
 # --- Зона результатов: теплое полотно ----------------------------------------
