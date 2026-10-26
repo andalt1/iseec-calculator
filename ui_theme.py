@@ -361,6 +361,43 @@ div[data-testid="stExpander"] summary {
     border-color: #0A2E86;
 }
 
+/* --- Главная кнопка «Рассчитать индекс» (key="calc_btn") ------------------ */
+.st-key-calc_btn button[kind="primary"] {
+    width: 100%;
+    min-height: 3.3rem;
+    padding: 0.55rem 1.4rem;
+    border-radius: 11px;
+    border: 1px solid #B08D3E;
+    background: linear-gradient(120deg, #E9D7A8 0%, #DCC287 55%, #D0B06A 100%);
+    color: #012169 !important;
+    box-shadow: 0 6px 18px rgba(146, 106, 26, 0.24);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.st-key-calc_btn button[kind="primary"] p {
+    color: #012169 !important;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+.st-key-calc_btn button[kind="primary"] [data-testid="stIconMaterial"] {
+    color: #012169 !important;
+    font-size: 1.45rem;
+}
+.st-key-calc_btn button[kind="primary"]:hover {
+    background: linear-gradient(120deg, #E2CC95 0%, #D3B672 55%, #C6A458 100%);
+    border-color: #9E7D33;
+    box-shadow: 0 9px 24px rgba(146, 106, 26, 0.32);
+    transform: translateY(-1px);
+}
+.st-key-calc_btn button[kind="primary"]:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(146, 106, 26, 0.26);
+}
+.st-key-calc_btn button[kind="primary"]:focus-visible {
+    outline: 3px solid #5E8FEF;
+    outline-offset: 2px;
+}
+
 thead tr th {
     background: #EDF2FA !important;
     color: #232830 !important;
@@ -422,7 +459,7 @@ def sidebar_footer() -> None:
           МГУ имени М.В. Ломоносова, факультет государственного управления<br><br>
           Свидетельство о государственной регистрации программы для ЭВМ
           № 2026663079 от 04.05.2026<br><br>
-          Версия 2.2 · август 2026
+          Версия 2.2.1 · октябрь 2026
         </div>
         """,
         unsafe_allow_html=True,
